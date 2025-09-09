@@ -48,6 +48,13 @@ body {
     flex-direction: column;
 }
 
+#music-player {
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+#music-player:hover {
+  transform: scale(1.05);
+  background: rgba(245, 245, 220, 0.95); /* sesuai tema beige */
+}
 
 
 .gentle-glow { animation: gentleGlow 3s ease-in-out infinite; }

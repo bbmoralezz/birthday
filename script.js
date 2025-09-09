@@ -1,3 +1,26 @@
+// Music Player Control
+const musicPlayer = document.getElementById('music-player');
+const musicIcon = document.getElementById('music-icon');
+const musicLabel = document.getElementById('music-label');
+const bgMusic = document.getElementById('bg-music');
+
+let isPlaying = false;
+
+musicPlayer.addEventListener('click', () => {
+  if (!isPlaying) {
+    bgMusic.play();
+    isPlaying = true;
+    musicIcon.textContent = "🎵";
+    musicLabel.textContent = "Pause Music";
+  } else {
+    bgMusic.pause();
+    isPlaying = false;
+    musicIcon.textContent = "🔇";
+    musicLabel.textContent = "Play Music";
+  }
+});
+
+
 // Create particles
 function createParticles() {
     for (let i = 0; i < 20; i++) {
