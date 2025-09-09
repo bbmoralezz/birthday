@@ -10,6 +10,14 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="flex flex-col items-center justify-center text-center py-10 px-4">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 flex items-center justify-center bg-beige-200 z-[99999]">
+    <div class="flex flex-col items-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-500 border-solid mb-4"></div>
+        <p class="text-lg font-semibold text-gray-700">Loading Memories...</p>
+    </div>
+    </div>
+
     <!-- Decorative elements -->
     <i class="decoration decoration-1 fas fa-heart"></i>
     <i class="decoration decoration-2 fas fa-star"></i>
