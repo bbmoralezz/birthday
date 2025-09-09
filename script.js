@@ -317,13 +317,4 @@ function updateProgressBar() {
 setInterval(updateProgressBar, 1000);
 updateProgressBar();
 
-// Loading screen - wait until all images are loaded
-window.addEventListener('load', () => {
-  const loadingScreen = document.getElementById('loading-screen');
-  if (loadingScreen) {
-    setTimeout(() => {
-      loadingScreen.classList.add('hidden');
-    }, 500); // kasih delay biar transisi halus
-  }
-});
 

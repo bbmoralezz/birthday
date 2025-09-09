@@ -48,13 +48,6 @@ body {
     flex-direction: column;
 }
 
-#loading-screen {
-  transition: opacity 0.8s ease, visibility 0.8s ease;
-}
-#loading-screen.hidden {
-  opacity: 0;
-  visibility: hidden;
-}
 
 
 .gentle-glow { animation: gentleGlow 3s ease-in-out infinite; }
