@@ -1,4 +1,3 @@
-// Music Player Control (fix for Android/iOS)
 const musicPlayer = document.getElementById('music-player');
 const musicIcon = document.getElementById('music-icon');
 const musicLabel = document.getElementById('music-label');
@@ -6,22 +5,28 @@ const bgMusic = document.getElementById('bg-music');
 
 let isPlaying = false;
 
-musicPlayer.addEventListener('click', async () => {
-  try {
-    if (!isPlaying) {
-      await bgMusic.play();  // pakai await biar error bisa ditangkap
+// pastikan musik bisa dimulai setelah gesture pertama
+document.body.addEventListener("click", () => {
+  if (!isPlaying && bgMusic.paused) {
+    bgMusic.play().catch(err => console.log("Blocked:", err));
+  }
+}, { once: true });
+
+musicPlayer.addEventListener('click', () => {
+  if (!isPlaying) {
+    bgMusic.play().then(() => {
       isPlaying = true;
       musicIcon.textContent = "🎵";
       musicLabel.textContent = "Pause Music";
-    } else {
-      bgMusic.pause();
-      isPlaying = false;
-      musicIcon.textContent = "🔇";
-      musicLabel.textContent = "Play Music";
-    }
-  } catch (err) {
-    console.log("Autoplay blocked:", err);
-    alert("👉 Tap sekali lagi untuk memulai musik 🎵");
+    }).catch(err => {
+      console.log("Play failed:", err);
+      alert("👉 Tap sekali lagi untuk memulai musik 🎵");
+    });
+  } else {
+    bgMusic.pause();
+    isPlaying = false;
+    musicIcon.textContent = "🔇";
+    musicLabel.textContent = "Play Music";
   }
 });
 
