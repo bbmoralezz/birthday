@@ -21,6 +21,8 @@
     name: config.name || "You",
     birthday: config.birthday || "2026-09-20",
     mainPhoto: config.mainPhoto || "image/1.png",
+    secretImage: config.secretImage || "image/1.jpeg",
+    secretCaption: config.secretCaption || "yaudah ini ajaa 😭",
     music: config.music || "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
     letter: config.letter || "Happy Birthday!\n\nSemoga selalu bahagia, sehat, dan dikelilingi hal-hal baik. 🤍"
   };
@@ -91,6 +93,18 @@
         if (fallback) fallback.hidden = false;
       };
     }
+
+    const secretImage = $("#secretImage");
+    if (secretImage) {
+      secretImage.src = safeConfig.secretImage;
+      secretImage.alt = safeConfig.secretCaption;
+      secretImage.onerror = () => {
+        secretImage.closest(".secret-photo-card")?.remove();
+      };
+    }
+
+    const secretCaption = $("#secretCaption");
+    if (secretCaption) secretCaption.textContent = safeConfig.secretCaption;
 
     const letterText = $("#letterText");
     if (letterText) letterText.textContent = safeConfig.letter;
@@ -242,28 +256,21 @@
     if (state.secretDone) return;
     state.secretDone = true;
 
-    const sequence = $("#secretSequence");
+    const reveal = $("#secretReveal");
     const button = $("#secretBtn");
-    if (!sequence || !button) return;
+    if (!reveal || !button) return;
 
     button.disabled = true;
-    button.textContent = "The secret is open 🤍";
-    sequence.hidden = false;
+    button.textContent = "udah dibuka 🤍";
+    reveal.hidden = false;
 
     emojiAPI()?.setIntensity("calm");
     emojiAPI()?.clear();
-
-    const beats = $$(".secret-beat", sequence);
-    const categories = ["surprise", "romantic", "greeting"];
-    beats.forEach((beat, index) => {
-      const paragraph = $("p", beat);
-      if (paragraph) paragraph.textContent = emojiAPI()?.pickMessage?.([categories[index]]) || "🤍";
-      setTimeout(() => beat.classList.add("show"), 650 + index * 1000);
-    });
+    emojiAPI()?.burst?.({ count: 4, stagger: 180 });
 
     setTimeout(() => $("#final")?.scrollIntoView({
       behavior: state.reducedMotion ? "auto" : "smooth"
-    }), 4300);
+    }), 2500);
   }
 
   function celebration() {
@@ -293,17 +300,16 @@
     const wishBtn = $("#wishBtn");
     if (wishBtn) {
       wishBtn.disabled = false;
-      wishBtn.textContent = "Make a Wish ✨";
+      wishBtn.textContent = "bikin wish ✨";
     }
     if ($("#wishMessage")) $("#wishMessage").hidden = true;
 
     const secretBtn = $("#secretBtn");
     if (secretBtn) {
       secretBtn.disabled = false;
-      secretBtn.textContent = "Open The Secret ✨";
+      secretBtn.textContent = "buka yang terakhir ✨";
     }
-    if ($("#secretSequence")) $("#secretSequence").hidden = true;
-    $$(".secret-beat").forEach(x => x.classList.remove("show"));
+    if ($("#secretReveal")) $("#secretReveal").hidden = true;
 
     if (bgMusic) {
       bgMusic.pause();
