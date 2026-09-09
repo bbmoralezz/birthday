@@ -13,7 +13,6 @@
     reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false
   };
 
-  const layer = $("#livingEmojiLayer");
   const bgMusic = $("#bgMusic");
   const musicSource = $("#musicSource");
   const musicToggle = $("#musicToggle");
@@ -30,6 +29,8 @@
       { image: "image/3.png", caption: "This one deserves a place in the scrapbook. ✨" }
     ]
   };
+
+  const emojiAPI = () => window.emojiLoop;
 
   function updateMusicUI() {
     if (!bgMusic || !musicToggle) return;
@@ -133,7 +134,7 @@
     caption.textContent = memory.caption || "A little memory.";
     viewer.hidden = false;
     document.body.style.overflow = "hidden";
-    window.emojiLoop?.setIntensity("playful");
+    emojiAPI()?.setIntensity("playful");
   }
 
   function closeMemory() {
@@ -153,7 +154,7 @@
       button.setAttribute("aria-expanded", String(opening));
       if (opening) {
         card.hidden = false;
-        window.emojiLoop?.setIntensity("cute");
+        emojiAPI()?.setIntensity("cute");
         setTimeout(() => card.scrollIntoView({
           behavior: state.reducedMotion ? "auto" : "smooth",
           block: "center"
@@ -228,13 +229,13 @@
     }
 
     if (message) {
-      message.textContent = window.emojiLoop?.pickMessage?.(["wish"]) || "Semoga semua impianmu tercapai ✨";
+      message.textContent = emojiAPI()?.pickMessage?.(["wish"]) || "Semoga semua impianmu tercapai ✨";
       message.hidden = false;
     }
 
-    window.emojiLoop?.setIntensity("playful");
-    window.emojiLoop?.burst?.({ category: "wish", count: 5, stagger: 120 });
-    setTimeout(() => makeConfetti(), 450);
+    emojiAPI()?.setIntensity("playful");
+    emojiAPI()?.burst?.({ category: "wish", count: 5, stagger: 120 });
+    setTimeout(makeConfetti, 450);
   }
 
   function secret() {
@@ -249,14 +250,14 @@
     button.textContent = "The secret is open 🤍";
     sequence.hidden = false;
 
-    window.emojiLoop?.setIntensity("calm");
-    window.emojiLoop?.clear?.();
+    emojiAPI()?.setIntensity("calm");
+    emojiAPI()?.clear();
 
     const beats = $$(".secret-beat", sequence);
     const categories = ["surprise", "romantic", "greeting"];
     beats.forEach((beat, index) => {
       const paragraph = $("p", beat);
-      if (paragraph) paragraph.textContent = window.emojiLoop?.pickMessage?.([categories[index]]) || "🤍";
+      if (paragraph) paragraph.textContent = emojiAPI()?.pickMessage?.([categories[index]]) || "🤍";
       setTimeout(() => beat.classList.add("show"), 650 + index * 1000);
     });
 
@@ -269,8 +270,8 @@
     if (state.celebrating) return;
     state.celebrating = true;
     document.body.classList.add("celebrating");
-    window.emojiLoop?.setIntensity("celebration");
-    window.emojiLoop?.burst?.({ count: 12, stagger: 180 });
+    emojiAPI()?.setIntensity("celebration");
+    emojiAPI()?.burst?.({ count: 12, stagger: 180 });
     makeConfetti();
   }
 
@@ -280,7 +281,7 @@
     state.secretDone = false;
     document.body.classList.remove("celebrating", "story-open");
 
-    window.emojiLoop?.reset?.();
+    emojiAPI()?.reset?.();
 
     $("#storyContent").hidden = true;
     $("#opening").hidden = false;
@@ -338,12 +339,13 @@
     if (!("IntersectionObserver" in window)) return;
 
     const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        window.emojiLoop?.setIntensity(entry.target.dataset.intensity || "cute");
-        if (entry.target.id === "final") celebration();
-      });
-    }, { threshold: 0.35 });
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      emojiAPI()?.setIntensity(visible.target.dataset.intensity || "cute");
+      if (visible.target.id === "final") celebration();
+    }, { threshold: [0.2, 0.35, 0.5, 0.7] });
 
     sections.forEach(section => observer.observe(section));
   }
@@ -351,7 +353,7 @@
   function revealStory() {
     $("#opening").hidden = true;
     $("#storyContent").hidden = false;
-    window.emojiLoop?.setIntensity("cute");
+    emojiAPI()?.setIntensity("cute");
     startMusic();
     document.body.classList.add("story-open");
     $("#hero")?.scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" });
