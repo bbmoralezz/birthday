@@ -188,9 +188,14 @@
     state.nodes.add(wrapper);
     state.active++;
 
-    const remove = () => removeNode(wrapper);
-    wrapper.addEventListener("animationend", remove, { once: true });
-    const timeout = window.setTimeout(remove, duration + 1200);
+    const remove = event => {
+      // animationend bubbles from floating-emoji and speech-bubble. Only the
+      // wrapper's own float animation may end its lifecycle.
+      if (event && (event.target !== wrapper || event.animationName !== "emojiFloat")) return;
+      removeNode(wrapper);
+    };
+    wrapper.addEventListener("animationend", remove);
+    const timeout = window.setTimeout(() => removeNode(wrapper), duration + 1200);
     wrapper.__emojiLoopTimeout = timeout;
     state.timeouts.add(timeout);
     return true;
