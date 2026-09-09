@@ -334,20 +334,10 @@
     });
   }
 
-  function setupSectionIntensity() {
-    const sections = $$(".story-section[data-intensity]");
-    if (!("IntersectionObserver" in window)) return;
-
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries
-        .filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      emojiAPI()?.setIntensity(visible.target.dataset.intensity || "cute");
-      if (visible.target.id === "final") celebration();
-    }, { threshold: [0.2, 0.35, 0.5, 0.7] });
-
-    sections.forEach(section => observer.observe(section));
+  function setupEmojiEvents() {
+    window.addEventListener("emoji-loop:intensity", event => {
+      if (event.detail?.name === "celebration") celebration();
+    });
   }
 
   function revealStory() {
@@ -364,7 +354,7 @@
     buildMemories();
     setupLetter();
     setupNavigation();
-    setupSectionIntensity();
+    setupEmojiEvents();
     updateMusicUI();
   }
 
