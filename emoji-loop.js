@@ -151,8 +151,8 @@
     if (wrapper.isConnected) wrapper.remove();
     state.active = Math.max(0, state.active - 1);
     const timeout = wrapper.__emojiLoopTimeout;
-    if (timeout) clearTimeoutHandle(timeout);
     wrapper.__emojiLoopTimeout = null;
+    if (timeout) clearTimeoutHandle(timeout);
   }
 
   function spawn(categories = [], options = {}) {
@@ -203,7 +203,6 @@
     }
     state.nodes.clear();
     state.active = 0;
-
     layer.querySelectorAll(".emoji-bubble-wrap.emoji-loop-owned").forEach(node => node.remove());
   }
 
@@ -239,8 +238,12 @@
     if (!state.running) start();
     if (changed) restartTimer();
 
-    // Make intensity changes perceptible immediately without depending on an observer event.
     if (state.running && state.active === 0) spawn();
+    if (changed) {
+      window.dispatchEvent(new CustomEvent("emoji-loop:intensity", {
+        detail: { name: next }
+      }));
+    }
   }
 
   function burst({ category = null, count = 1, stagger = 0 } = {}) {
