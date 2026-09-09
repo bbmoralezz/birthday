@@ -30,8 +30,6 @@ musicPlayer.addEventListener('click', () => {
   }
 });
 
-
-
 // Create particles
 function createParticles() {
     for (let i = 0; i < 20; i++) {
@@ -139,7 +137,6 @@ updateIndicators();
 startAutoSlide();
 
 // Fireworks effect
-// Fireworks effect (elegant gold sparkle)
 function createFireworks() {
     const canvas = document.getElementById('fireworks-canvas');
     const ctx = canvas.getContext('2d');
@@ -195,7 +192,6 @@ function createFireworks() {
         }
     }
 
-    // Convert hex color → rgb
     function hexToRgb(hex) {
         hex = hex.replace(/^#/, "");
         if (hex.length === 3) {
@@ -205,9 +201,8 @@ function createFireworks() {
         return [(num >> 16) & 255, (num >> 8) & 255, num & 255].join(",");
     }
 
-    // Start explosion
     canvas.style.display = "block";
-    createExplosion(canvas.width / 2, canvas.height / 2); // center
+    createExplosion(canvas.width / 2, canvas.height / 2);
     for (let i = 0; i < 3; i++) {
         setTimeout(() => {
             createExplosion(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
@@ -225,7 +220,6 @@ document.getElementById('giftBtn').addEventListener('click', () => {
     message.classList.remove('hidden');
     message.style.animation = 'softFadeIn 1.5s ease-out';
     
-    // Hide surprise if it's open
     const surprise = document.getElementById('surprise');
     if (!surprise.classList.contains('hidden')) {
         surprise.classList.add('hidden');
@@ -241,7 +235,6 @@ document.getElementById('surpriseBtn').addEventListener('click', () => {
     if (!surprise.classList.contains('hidden')) {
         surprise.style.animation = 'softFadeIn 1.5s ease-out';
         
-        // Hide message if it's open
         const message = document.getElementById('message');
         if (!message.classList.contains('hidden')) {
             message.classList.add('hidden');
@@ -249,38 +242,37 @@ document.getElementById('surpriseBtn').addEventListener('click', () => {
     }
 });
 
-// Countdown to Yasmin Az Zahra's next birthday (10 September 2006)
-function getNextBirthday() {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    
-    // Check if birthday has already passed this year
-    let birthdayThisYear = new Date(currentYear, 8, 10); // 8 is September (0-indexed)
-    
-    if (birthdayThisYear < now) {
-        // If birthday has passed, use next year
-        return new Date(currentYear + 1, 8, 10);
-    } else {
-        // If birthday hasn't passed yet this year
-        return birthdayThisYear;
+// Countdown to the 10 September 2026 milestone.
+// After that exact moment, the main page stays on the completed state
+// and shows a button to the 2026 birthday page.
+const birthdayTarget = new Date(2026, 8, 10, 0, 0, 0, 0);
+const birthdayPageUrl = 'https://bbmoralezz.github.io/birthday/2026/';
+let countdownFinished = false;
+
+function showCountdownFinished() {
+    if (countdownFinished) return;
+    countdownFinished = true;
+
+    document.getElementById('days').textContent = '00';
+    document.getElementById('hours').textContent = '00';
+    document.getElementById('minutes').textContent = '00';
+    document.getElementById('seconds').textContent = '00';
+
+    const countdown = document.querySelector('.countdown');
+    if (countdown) {
+        countdown.insertAdjacentHTML('beforeend', '<div id="birthday-2026-link" class="mt-6"><a href="' + birthdayPageUrl + '" class="inline-block px-6 py-3 rounded-full bg-pink-500 text-white font-semibold shadow-lg hover:bg-pink-600 transition-colors">🎂 Buka Birthday 2026</a></div>');
     }
 }
 
 function updateCountdown() {
     const now = new Date();
-    const nextBirthday = getNextBirthday();
-    const diff = nextBirthday - now;
-    
+    const diff = birthdayTarget - now;
+
     if (diff <= 0) {
-        // If it's the birthday today
-        document.getElementById('days').textContent = '00';
-        document.getElementById('hours').textContent = '00';
-        document.getElementById('minutes').textContent = '00';
-        document.getElementById('seconds').textContent = '00';
-        document.querySelector('.countdown').textContent = "Happy Birthday! 🎉";
+        showCountdownFinished();
         return;
     }
-    
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -309,7 +301,6 @@ document.getElementById('giftBtn').addEventListener('click', () => {
   const message = document.getElementById('message');
   const surprise = document.getElementById('surprise');
 
-  // tampilkan giftbox dulu
   giftBox.classList.remove('hidden');
 
   const img = giftBox.querySelector('img');
@@ -323,7 +314,7 @@ document.getElementById('giftBtn').addEventListener('click', () => {
     if (!surprise.classList.contains('hidden')) {
       surprise.classList.add('hidden');
     }
-  }, 1500); // setelah shake 1.5 detik → muncul pesan
+  }, 1500);
 });
 
 // Blessing Interactivity
@@ -333,22 +324,20 @@ document.querySelectorAll('.light').forEach((el) => {
     text.className = 'blessing-text';
     text.textContent = el.getAttribute('title');
     el.insertAdjacentElement('afterend', text);
-    setTimeout(() => text.remove(), 3000); // hilang setelah 3 detik
+    setTimeout(() => text.remove(), 3000);
   });
 });
 
 // Countdown Progress Bar
 function updateProgressBar() {
   const now = new Date();
-  const nextBirthday = getNextBirthday();
-  const startYear = new Date(nextBirthday.getFullYear() - 1, 8, 10); // tahun lalu
-  const total = nextBirthday - startYear;
+  const startYear = new Date(2025, 8, 10);
+  const total = birthdayTarget - startYear;
   const elapsed = now - startYear;
   const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
-  document.getElementById('progress').style.width = percent + "%";
+  const progress = document.getElementById('progress');
+  if (progress) progress.style.width = percent + "%";
 }
 
 setInterval(updateProgressBar, 1000);
 updateProgressBar();
-
-
