@@ -1,354 +1,343 @@
-const musicPlayer = document.getElementById('music-player');
-const musicIcon = document.getElementById('music-icon');
-const musicLabel = document.getElementById('music-label');
-const bgMusic = document.getElementById('bg-music');
+(() => {
+  "use strict";
 
-let isPlaying = false;
+  const config = window.birthdayConfig || {};
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-// pastikan musik bisa dimulai setelah gesture pertama
-document.body.addEventListener("click", () => {
-  if (!isPlaying && bgMusic.paused) {
-    bgMusic.play().catch(err => console.log("Blocked:", err));
+  const fallbackMessages = [
+    { category: "greeting", message: "Happy Birthday! 🎂" },
+    { category: "cute", message: "Jangan lupa senyum hari ini 🤍" },
+    { category: "wish", message: "Semoga semua impianmu tercapai ✨" },
+    { category: "romantic", message: "You are very special to me ❤️" },
+    { category: "surprise", message: "Psst... masih ada kejutan 👀" },
+    { category: "funny", message: "Umur boleh bertambah, tapi tetap cute 😆" }
+  ];
+
+  const state = {
+    messages: fallbackMessages,
+    recentMessages: [],
+    activeEmojis: 0,
+    spawnTimer: null,
+    currentIntensity: "calm",
+    musicStarted: false,
+    celebrating: false,
+    wishDone: false,
+    secretDone: false,
+    reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false
+  };
+
+  const layer = $("#livingEmojiLayer");
+  const bgMusic = $("#bgMusic");
+  const musicSource = $("#musicSource");
+  const musicToggle = $("#musicToggle");
+
+  const safeConfig = {
+    name: config.name || "You",
+    birthday: config.birthday || "2026-09-20",
+    mainPhoto: config.mainPhoto || "image/1.png",
+    music: config.music || "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
+    letter: config.letter || "Happy Birthday!\n\nSemoga selalu bahagia, sehat, dan dikelilingi hal-hal baik. 🤍",
+    memories: Array.isArray(config.memories) && config.memories.length ? config.memories : [
+      { image: "image/1.png", caption: "A little memory worth keeping. 🌷" },
+      { image: "image/2.png", caption: "One of many tiny memories. 💗" },
+      { image: "image/3.png", caption: "This one deserves a place in the scrapbook. ✨" }
+    ],
+    emojiPool: Array.isArray(config.emojiPool) && config.emojiPool.length ? config.emojiPool : ["🥰","😊","🥺","😆","🤭","👀","🐻","🐰","🧸","💗","❤️","✨","🌷","🎀","🎂","🎈","🌸"],
+    intensity: config.intensity || {}
+  };
+
+  function getIntensity(name = "cute") {
+    const defaults = {
+      calm: { spawnInterval: 2500, maxActive: 2, minDuration: 4000, maxDuration: 6000 },
+      cute: { spawnInterval: 1800, maxActive: 4, minDuration: 3800, maxDuration: 6200 },
+      playful: { spawnInterval: 1200, maxActive: 6, minDuration: 3400, maxDuration: 5800 },
+      celebration: { spawnInterval: 650, maxActive: 10, minDuration: 3000, maxDuration: 5200 }
+    };
+    return { ...defaults[name] || defaults.cute, ...(safeConfig.intensity[name] || {}) };
   }
-}, { once: true });
 
-musicPlayer.addEventListener('click', () => {
-  if (!isPlaying) {
-    bgMusic.play().then(() => {
-      isPlaying = true;
-      musicIcon.textContent = "🎵";
-      musicLabel.textContent = "Pause Music";
-    }).catch(err => {
-      console.log("Play failed:", err);
-      alert("👉 Tap sekali lagi untuk memulai musik 🎵");
-    });
-  } else {
-    bgMusic.pause();
-    isPlaying = false;
-    musicIcon.textContent = "🔇";
-    musicLabel.textContent = "Play Music";
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>'"]/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;" })[char]);
   }
-});
 
-
-
-// Create particles
-function createParticles() {
-    for (let i = 0; i < 20; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * window.innerWidth + 'px';
-        particle.style.top = Math.random() * window.innerHeight + 'px';
-        particle.style.animationDelay = (Math.random() * 6) + 's';
-        document.body.appendChild(particle);
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", quoted = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], next = text[i + 1];
+      if (c === '"' && quoted && next === '"') { field += '"'; i++; continue; }
+      if (c === '"') { quoted = !quoted; continue; }
+      if (c === ',' && !quoted) { row.push(field.trim()); field = ""; continue; }
+      if ((c === '\n' || c === '\r') && !quoted) {
+        if (c === '\r' && next === '\n') i++;
+        row.push(field.trim());
+        if (row.some(Boolean)) rows.push(row);
+        row = []; field = ""; continue;
+      }
+      field += c;
     }
-}
+    row.push(field.trim());
+    if (row.some(Boolean)) rows.push(row);
+    if (rows.length < 2) return [];
+    const header = rows[0].map(x => x.toLowerCase());
+    const categoryIndex = header.indexOf("category"), messageIndex = header.indexOf("message");
+    if (messageIndex < 0) return [];
+    return rows.slice(1).map(r => ({ category: r[categoryIndex] || "general", message: r[messageIndex] || "" })).filter(x => x.message);
+  }
 
-createParticles();
+  async function loadMessages() {
+    try {
+      const response = await fetch("assets/messages/birthday-messages.csv", { cache: "no-store" });
+      if (!response.ok) throw new Error("CSV unavailable");
+      const parsed = parseCSV(await response.text());
+      if (parsed.length) state.messages = parsed;
+    } catch (error) {
+      console.info("Using built-in birthday messages.");
+    }
+  }
 
-// Enhanced Slideshow functionality
-let currentSlide = 0;
-const slides = document.querySelectorAll('.slide');
-const totalSlides = slides.length;
-const slidesWrapper = document.getElementById('slides');
-const indicatorsContainer = document.getElementById('indicators');
-let autoSlideInterval;
+  function pickMessage(categories = []) {
+    const wanted = new Set(categories);
+    const pool = wanted.size ? state.messages.filter(m => wanted.has(m.category)) : state.messages;
+    const source = pool.length ? pool : state.messages.length ? state.messages : fallbackMessages;
+    const available = source.filter(m => !state.recentMessages.includes(m.message));
+    const candidates = available.length ? available : source;
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    state.recentMessages.push(chosen.message);
+    if (state.recentMessages.length > 6) state.recentMessages.shift();
+    return chosen.message;
+  }
 
-// Create indicators
-for (let i = 0; i < totalSlides; i++) {
-    const indicator = document.createElement('div');
-    indicator.className = 'indicator';
-    indicator.addEventListener('click', () => goToSlide(i));
-    indicatorsContainer.appendChild(indicator);
-}
+  function updateMusicUI() {
+    const playing = !bgMusic.paused;
+    $("#musicIcon").textContent = playing ? "🎵" : "🔇";
+    $("#musicLabel").textContent = playing ? "Music on" : "Music off";
+    musicToggle.setAttribute("aria-pressed", String(playing));
+    musicToggle.setAttribute("aria-label", playing ? "Turn music off" : "Turn music on");
+  }
 
-const indicators = document.querySelectorAll('.indicator');
+  async function startMusic() {
+    if (!bgMusic || state.musicStarted) return;
+    try { await bgMusic.play(); state.musicStarted = true; updateMusicUI(); } catch (_) { /* browser requires another gesture */ }
+  }
 
-function updateIndicators() {
-    indicators.forEach((ind, index) => {
-        ind.classList.toggle('active', index === currentSlide);
+  async function toggleMusic() {
+    if (bgMusic.paused) {
+      try { await bgMusic.play(); state.musicStarted = true; } catch (_) {}
+    } else bgMusic.pause();
+    updateMusicUI();
+  }
+
+  function clearEmojiLayer() {
+    if (!layer) return;
+    layer.replaceChildren();
+    state.activeEmojis = 0;
+  }
+
+  function randomPosition() {
+    // Keep the center column clear so primary content remains readable.
+    const side = Math.random() < .5 ? "left" : "right";
+    return {
+      side,
+      x: 4 + Math.random() * 20,
+      y: 12 + Math.random() * 76
+    };
+  }
+
+  function spawnEmoji(forceCategory = null) {
+    if (state.reducedMotion || !layer) return;
+    const cfg = getIntensity(state.currentIntensity);
+    if (state.activeEmojis >= cfg.maxActive) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "emoji-bubble-wrap";
+    const emoji = document.createElement("span");
+    emoji.className = "floating-emoji";
+    emoji.textContent = safeConfig.emojiPool[Math.floor(Math.random() * safeConfig.emojiPool.length)];
+
+    const pos = randomPosition();
+    const scale = (cfg.minScale || .8) + Math.random() * ((cfg.maxScale || 1.3) - (cfg.minScale || .8));
+    const duration = cfg.minDuration + Math.random() * (cfg.maxDuration - cfg.minDuration);
+    const drift = (Math.random() * 60 - 30).toFixed(0) + "px";
+    const rotation = (Math.random() * 20 - 10).toFixed(0) + "deg";
+    wrapper.style.left = pos.side === "left" ? pos.x + "%" : "auto";
+    wrapper.style.right = pos.side === "right" ? pos.x + "%" : "auto";
+    wrapper.style.top = pos.y + "%";
+    wrapper.style.setProperty("--size", (1.6 + Math.random() * .9).toFixed(2) + "rem");
+    wrapper.style.setProperty("--duration", duration + "ms");
+    wrapper.style.setProperty("--drift", drift);
+    wrapper.style.setProperty("--rotation", rotation);
+    emoji.style.transform = `scale(${scale})`;
+
+    const bubble = document.createElement("div");
+    bubble.className = `speech-bubble ${pos.side === "left" ? "bubble-right" : "bubble-left"}`;
+    bubble.textContent = pickMessage(forceCategory ? [forceCategory] : []);
+    wrapper.append(emoji, bubble);
+    layer.appendChild(wrapper);
+    state.activeEmojis++;
+
+    const remove = () => {
+      if (!wrapper.isConnected) return;
+      wrapper.remove();
+      state.activeEmojis = Math.max(0, state.activeEmojis - 1);
+    };
+    wrapper.addEventListener("animationend", remove, { once: true });
+    setTimeout(remove, duration + 700);
+  }
+
+  function setIntensity(name) {
+    if (state.currentIntensity === name) return;
+    state.currentIntensity = name;
+    clearInterval(state.spawnTimer);
+    const cfg = getIntensity(name);
+    if (!state.reducedMotion) {
+      state.spawnTimer = setInterval(() => spawnEmoji(), cfg.spawnInterval);
+      spawnEmoji();
+    }
+  }
+
+  function startEmojiEngine() {
+    setIntensity("calm");
+  }
+
+  function revealStory() {
+    $("#opening").hidden = true;
+    $("#storyContent").hidden = false;
+    setIntensity("cute");
+    startMusic();
+    document.body.classList.add("story-open");
+    $("#hero").scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" });
+  }
+
+  function setupPersonalization() {
+    [$("#heroName"), $("#finalName"), $("#letterName")].forEach(el => { if (el) el.textContent = safeConfig.name; });
+    const date = new Date(`${safeConfig.birthday}T00:00:00`);
+    $("#birthdayDateText").textContent = Number.isNaN(date.getTime()) ? safeConfig.birthday : date.toLocaleDateString("en-US", { day:"numeric", month:"long", year:"numeric" });
+    if (musicSource) musicSource.src = safeConfig.music;
+    if (bgMusic) bgMusic.load();
+    const photo = $("#mainPhoto");
+    photo.src = safeConfig.mainPhoto;
+    photo.onerror = () => { photo.hidden = true; $(".image-fallback", $("#mainPhotoCard")).hidden = false; };
+    $("#letterText").textContent = safeConfig.letter;
+  }
+
+  function buildMemories() {
+    const grid = $("#memoryGrid");
+    if (!grid) return;
+    grid.replaceChildren();
+    safeConfig.memories.forEach((memory, index) => {
+      const button = document.createElement("button");
+      button.className = "memory-card";
+      button.type = "button";
+      button.setAttribute("aria-label", `Open memory ${index + 1}`);
+      button.innerHTML = `<img src="${escapeHTML(memory.image)}" alt="Memory ${index + 1}" loading="lazy"><figcaption><span class="memory-number">${String(index + 1).padStart(2,"0")}</span> · ${escapeHTML(memory.caption || "A little memory.")}</figcaption>`;
+      const img = $("img", button);
+      img.addEventListener("error", () => { img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 600"><rect width="100%" height="100%" fill="#f3ded3"/><text x="50%" y="48%" text-anchor="middle" font-size="70">🌷</text><text x="50%" y="60%" text-anchor="middle" font-size="24" fill="#8b6f61">little memory</text></svg>`)}`; });
+      button.addEventListener("click", () => openMemory(memory));
+      grid.appendChild(button);
     });
-}
+  }
 
-function goToSlide(slideIndex) {
-    currentSlide = slideIndex;
-    updateSlides();
-    updateIndicators();
-    resetAutoSlide();
-}
+  function openMemory(memory) {
+    const viewer = $("#memoryViewer"), image = $("#viewerImage"), caption = $("#viewerCaption");
+    image.src = memory.image; image.alt = memory.caption || "Memory"; caption.textContent = memory.caption || "A little memory.";
+    viewer.hidden = false; document.body.style.overflow = "hidden"; setIntensity("playful");
+  }
 
-function updateSlides() {
-    slidesWrapper.style.transform = `translateX(-${currentSlide * 100}%)`;
-    slides.forEach((slide, index) => {
-        if (index === currentSlide) {
-            slide.style.opacity = 1;
-        } else {
-            slide.style.opacity = 0;
-        }
+  function closeMemory() { $("#memoryViewer").hidden = true; document.body.style.overflow = ""; }
+
+  function setupLetter() {
+    const button = $("#envelopeBtn"), card = $("#letterCard");
+    button.addEventListener("click", () => {
+      const opening = !button.classList.contains("open");
+      button.classList.toggle("open", opening); button.setAttribute("aria-expanded", String(opening));
+      if (opening) {
+        card.hidden = false; setIntensity("cute");
+        setTimeout(() => card.scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth", block:"center" }), 450);
+      } else card.hidden = true;
     });
-}
+  }
 
-document.getElementById('prevBtn').addEventListener('click', () => {
-    goToSlide((currentSlide - 1 + totalSlides) % totalSlides);
-});
+  function makeConfetti() {
+    const canvas = $("#celebrationCanvas"), ctx = canvas.getContext("2d");
+    if (!canvas || state.reducedMotion) return;
+    const resize = () => { canvas.width = innerWidth * devicePixelRatio; canvas.height = innerHeight * devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); };
+    resize();
+    const pieces = Array.from({ length: 90 }, () => ({ x: Math.random()*innerWidth, y: -20-Math.random()*innerHeight*.4, vx: Math.random()*2-1, vy: 2+Math.random()*4, r: Math.random()*Math.PI, s: 5+Math.random()*7, emoji: ["💗","✨","🎈","🌸","🎀"][Math.floor(Math.random()*5)] }));
+    let frame = 0;
+    const draw = () => {
+      ctx.clearRect(0,0,innerWidth,innerHeight);
+      pieces.forEach(p => { p.x += p.vx; p.y += p.vy; p.r += .05; ctx.font = `${p.s*2}px serif`; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillText(p.emoji,0,0); ctx.restore(); if (p.y > innerHeight+30) { p.y=-30; p.x=Math.random()*innerWidth; } });
+      frame++; if (frame < 500 && state.celebrating) requestAnimationFrame(draw); else ctx.clearRect(0,0,innerWidth,innerHeight);
+    };
+    draw();
+    window.addEventListener("resize", resize, { once: true });
+  }
 
-document.getElementById('nextBtn').addEventListener('click', () => {
-    goToSlide((currentSlide + 1) % totalSlides);
-});
+  function wish() {
+    if (state.wishDone) return;
+    state.wishDone = true;
+    const stage = $("#cakeStage"), message = $("#wishMessage"), button = $("#wishBtn");
+    stage.classList.add("wished"); button.disabled = true; button.textContent = "Wish made! 🤍";
+    message.textContent = pickMessage(["wish"]);
+    message.hidden = false;
+    setIntensity("playful");
+    for (let i=0;i<5;i++) setTimeout(() => spawnEmoji("wish"), i*120);
+    setTimeout(() => makeConfetti(), 450);
+  }
 
-// Auto-slide every 4 seconds
-function startAutoSlide() {
-    autoSlideInterval = setInterval(() => {
-        goToSlide((currentSlide + 1) % totalSlides);
-    }, 4000);
-}
+  function secret() {
+    if (state.secretDone) return;
+    state.secretDone = true;
+    const sequence = $("#secretSequence"), button = $("#secretBtn");
+    button.disabled = true; button.textContent = "The secret is open 🤍"; sequence.hidden = false;
+    setIntensity("calm"); clearEmojiLayer();
+    const beats = $$(".secret-beat", sequence);
+    beats[0].querySelector("p").textContent = pickMessage(["surprise"]);
+    beats[1].querySelector("p").textContent = pickMessage(["romantic"]);
+    beats[2].querySelector("p").textContent = pickMessage(["greeting"]);
+    beats.forEach((beat, i) => setTimeout(() => beat.classList.add("show"), 650 + i*1000));
+    setTimeout(() => $("#final").scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" }), 4300);
+  }
 
-function resetAutoSlide() {
-    clearInterval(autoSlideInterval);
-    startAutoSlide();
-}
+  function celebration() {
+    if (state.celebrating) return;
+    state.celebrating = true; document.body.classList.add("celebrating"); setIntensity("celebration"); makeConfetti();
+    for (let i=0;i<12;i++) setTimeout(() => spawnEmoji(), i*180);
+  }
 
-// Keyboard navigation
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') goToSlide((currentSlide - 1 + totalSlides) % totalSlides);
-    if (e.key === 'ArrowRight') goToSlide((currentSlide + 1) % totalSlides);
-});
+  function replay() {
+    state.celebrating = false; state.wishDone = false; state.secretDone = false; state.recentMessages = [];
+    document.body.classList.remove("celebrating", "story-open"); clearEmojiLayer();
+    $("#storyContent").hidden = true; $("#opening").hidden = false;
+    $("#envelopeBtn").classList.remove("open"); $("#envelopeBtn").setAttribute("aria-expanded","false"); $("#letterCard").hidden = true;
+    $("#cakeStage").classList.remove("wished"); $("#wishBtn").disabled = false; $("#wishBtn").textContent = "Make a Wish ✨"; $("#wishMessage").hidden = true;
+    $("#secretBtn").disabled = false; $("#secretBtn").textContent = "Open The Secret ✨"; $("#secretSequence").hidden = true; $$(".secret-beat").forEach(x => x.classList.remove("show"));
+    bgMusic.pause(); bgMusic.currentTime = 0; state.musicStarted = false; updateMusicUI();
+    window.scrollTo({ top: 0, behavior: state.reducedMotion ? "auto" : "smooth" }); startEmojiEngine();
+  }
 
-// Touch/swipe support
-let touchStartX = 0;
-let touchEndX = 0;
+  function setupNavigation() {
+    $("#openSurpriseBtn").addEventListener("click", revealStory);
+    $$("[data-scroll]").forEach(btn => btn.addEventListener("click", () => $("#" + btn.dataset.scroll)?.scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" })));
+    $("#closeMemory").addEventListener("click", closeMemory); $("#memoryViewer").addEventListener("click", e => { if (e.target.id === "memoryViewer") closeMemory(); });
+    $("#wishBtn").addEventListener("click", wish); $("#secretBtn").addEventListener("click", secret); $("#replayBtn").addEventListener("click", replay); musicToggle.addEventListener("click", toggleMusic);
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeMemory(); });
+    document.addEventListener("click", e => { if (!state.reducedMotion && !e.target.closest("button,input,textarea,a")) spawnEmoji(); }, { passive: true });
+  }
 
-slidesWrapper.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-});
+  function setupSectionIntensity() {
+    const sections = $$(".story-section[data-intensity]");
+    if (!("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => { if (entry.isIntersecting) { setIntensity(entry.target.dataset.intensity); if (entry.target.id === "final") celebration(); } }), { threshold: .35 });
+    sections.forEach(section => observer.observe(section));
+  }
 
-slidesWrapper.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    if (touchEndX < touchStartX) goToSlide((currentSlide + 1) % totalSlides);
-    else if (touchEndX > touchStartX) goToSlide((currentSlide - 1 + totalSlides) % totalSlides);
-});
+  async function init() {
+    setupPersonalization(); buildMemories(); setupLetter(); setupNavigation(); startEmojiEngine();
+    await loadMessages(); setupSectionIntensity(); updateMusicUI();
+  }
 
-// Pause on hover
-const slideshowContainer = document.querySelector('.slideshow-container');
-slideshowContainer.addEventListener('mouseenter', () => clearInterval(autoSlideInterval));
-slideshowContainer.addEventListener('mouseleave', startAutoSlide);
-
-// Initial setup
-updateSlides();
-updateIndicators();
-startAutoSlide();
-
-// Fireworks effect
-// Fireworks effect (elegant gold sparkle)
-function createFireworks() {
-    const canvas = document.getElementById('fireworks-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let particles = [];
-
-    function createExplosion(x, y) {
-        const colors = ["#FFD700", "#FFF5CC", "#FFFAE3", "#F5E6A3"];
-        for (let i = 0; i < 120; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 6 + 2;
-            particles.push({
-                x: x,
-                y: y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                alpha: 1,
-                size: Math.random() * 3 + 2,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                gravity: 0.05,
-                friction: 0.92
-            });
-        }
-    }
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        particles.forEach((p, i) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.vy += p.gravity;
-            p.vx *= p.friction;
-            p.vy *= p.friction;
-            p.alpha -= 0.015;
-
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.alpha})`;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = p.color;
-            ctx.fill();
-
-            if (p.alpha <= 0) particles.splice(i, 1);
-        });
-
-        if (particles.length > 0) {
-            requestAnimationFrame(animate);
-        } else {
-            canvas.style.display = 'none';
-        }
-    }
-
-    // Convert hex color → rgb
-    function hexToRgb(hex) {
-        hex = hex.replace(/^#/, "");
-        if (hex.length === 3) {
-            hex = hex.split("").map(h => h + h).join("");
-        }
-        const num = parseInt(hex, 16);
-        return [(num >> 16) & 255, (num >> 8) & 255, num & 255].join(",");
-    }
-
-    // Start explosion
-    canvas.style.display = "block";
-    createExplosion(canvas.width / 2, canvas.height / 2); // center
-    for (let i = 0; i < 3; i++) {
-        setTimeout(() => {
-            createExplosion(Math.random() * canvas.width, Math.random() * canvas.height * 0.6);
-        }, i * 600);
-    }
-
-    animate();
-}
-
-// Gift button interaction with fireworks
-document.getElementById('giftBtn').addEventListener('click', () => {
-    createFireworks();
-    
-    const message = document.getElementById('message');
-    message.classList.remove('hidden');
-    message.style.animation = 'softFadeIn 1.5s ease-out';
-    
-    // Hide surprise if it's open
-    const surprise = document.getElementById('surprise');
-    if (!surprise.classList.contains('hidden')) {
-        surprise.classList.add('hidden');
-    }
-});
-
-// Surprise button interaction with fireworks
-document.getElementById('surpriseBtn').addEventListener('click', () => {
-    createFireworks();
-    
-    const surprise = document.getElementById('surprise');
-    surprise.classList.toggle('hidden');
-    if (!surprise.classList.contains('hidden')) {
-        surprise.style.animation = 'softFadeIn 1.5s ease-out';
-        
-        // Hide message if it's open
-        const message = document.getElementById('message');
-        if (!message.classList.contains('hidden')) {
-            message.classList.add('hidden');
-        }
-    }
-});
-
-// Countdown to Yasmin Az Zahra's next birthday (10 September 2006)
-function getNextBirthday() {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    
-    // Check if birthday has already passed this year
-    let birthdayThisYear = new Date(currentYear, 8, 10); // 8 is September (0-indexed)
-    
-    if (birthdayThisYear < now) {
-        // If birthday has passed, use next year
-        return new Date(currentYear + 1, 8, 10);
-    } else {
-        // If birthday hasn't passed yet this year
-        return birthdayThisYear;
-    }
-}
-
-function updateCountdown() {
-    const now = new Date();
-    const nextBirthday = getNextBirthday();
-    const diff = nextBirthday - now;
-    
-    if (diff <= 0) {
-        // If it's the birthday today
-        document.getElementById('days').textContent = '00';
-        document.getElementById('hours').textContent = '00';
-        document.getElementById('minutes').textContent = '00';
-        document.getElementById('seconds').textContent = '00';
-        document.querySelector('.countdown').textContent = "Happy Birthday! 🎉";
-        return;
-    }
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    document.getElementById('days').textContent = days.toString().padStart(2, '0');
-    document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-    document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-    document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-}
-
-// Initialize countdown and update every second
-updateCountdown();
-setInterval(updateCountdown, 1000);
-
-// Responsive canvas resizing
-window.addEventListener('resize', () => {
-    const canvas = document.getElementById('fireworks-canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-
-// Gift Box Animation
-document.getElementById('giftBtn').addEventListener('click', () => {
-  const giftBox = document.getElementById('gift-box');
-  const message = document.getElementById('message');
-  const surprise = document.getElementById('surprise');
-
-  // tampilkan giftbox dulu
-  giftBox.classList.remove('hidden');
-
-  const img = giftBox.querySelector('img');
-  img.classList.add('gift-open');
-
-  setTimeout(() => {
-    giftBox.classList.add('hidden');
-    img.classList.remove('gift-open');
-    message.classList.remove('hidden');
-    message.style.animation = 'softFadeIn 1.5s ease-out';
-    if (!surprise.classList.contains('hidden')) {
-      surprise.classList.add('hidden');
-    }
-  }, 1500); // setelah shake 1.5 detik → muncul pesan
-});
-
-// Blessing Interactivity
-document.querySelectorAll('.light').forEach((el) => {
-  el.addEventListener('click', () => {
-    const text = document.createElement('div');
-    text.className = 'blessing-text';
-    text.textContent = el.getAttribute('title');
-    el.insertAdjacentElement('afterend', text);
-    setTimeout(() => text.remove(), 3000); // hilang setelah 3 detik
-  });
-});
-
-// Countdown Progress Bar
-function updateProgressBar() {
-  const now = new Date();
-  const nextBirthday = getNextBirthday();
-  const startYear = new Date(nextBirthday.getFullYear() - 1, 8, 10); // tahun lalu
-  const total = nextBirthday - startYear;
-  const elapsed = now - startYear;
-  const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
-  document.getElementById('progress').style.width = percent + "%";
-}
-
-setInterval(updateProgressBar, 1000);
-updateProgressBar();
-
-
+  init();
+})();
