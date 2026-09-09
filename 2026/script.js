@@ -111,7 +111,7 @@
       button.type = "button";
       button.setAttribute("aria-label", `Open memory ${index + 1}`);
 
-      const caption = `Memory ${String(index + 1).padStart(2, "0")}`;
+      const caption = `📸`;
       button.innerHTML = `<img src="${escapeHTML(image)}" alt="${caption}" loading="lazy"><figcaption><span class="memory-number">${String(index + 1).padStart(2, "0")}</span> · ${caption}</figcaption>`;
 
       const img = $("img", button);
