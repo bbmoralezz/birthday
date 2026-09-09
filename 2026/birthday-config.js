@@ -5,18 +5,28 @@ window.birthdayConfig = {
   secretImage: "pp.jpg",
   secretCaption: "wleee😛",
   music: "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
-  letter: `happy birthday jaraaa 🎂
+  letter: `HAPPY BIRTHDAY JARAAAAAA🥳🥳🥳🥳🥳
 
-akhirnya kepala dua juga yaa. selamat datang di umur yang katanya udah dewasa, walaupun kayaknya masih suka bilang "bentar" terus hilang sejam wkwk.
+  CIEHH UDAH 20 TAHUN COOOOYYY
+  BLIO SUDAH KEPALA 2 LOH YA😱😱😱😱
 
-semoga di umur yang baru ini jara selalu sehat, bahagia, dimudahkan semua urusannya, dan dipertemukan sama banyak hal baik. semoga semua yang lagi diusahain pelan pelan ketemu jalannya, dan semua yang lagi ditunggu semoga datang di waktu yang paling pas.
+  🥳🥳🥳🥳🥳🥳🥳🦢🦢🦢🦢🦢🦢😝😝😝😝🤭🤭🤭🤭🤭🤭😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😱😱🤯🤯🤯🫪🫪🥳🥳🥳🥳🤩🤩🤩🤩😌😌😌🫨🫨🫨🫨😯😯😯😸😸😸😼😼😼👀👀👁️🧕🏻🧕🏻🧏‍♂️🧏🧏‍♀️🤳🤳🤳🤳🤳
 
-jangan terlalu keras sama diri sendiri yaa. kalau capek istirahat, kalau sedih gapapa, tapi nanti senyum lagi. ga harus selalu kuat setiap waktu. yang penting jangan lupa makan, jangan lupa minum, jangan kebanyakan begadang juga walaupun kemungkinan besar bakal dilanggar 😭
+semoga jara panjang umuurr, sehat teruuss dan bisa gapai cita cita di kepala 2 inih😼😼😼😼
+AAAAAAAAAAAAAAAAAAAAAMMMMMIIIIIIIIIIIIIIIIIIIINNNNNNNNNNNNNNNNNN
 
-pokoknya selamat ulang tahun jaraaa. semoga tahun ini lebih baik dari sebelumnya, lebih banyak ketawa daripada nangis, lebih banyak cerita baik daripada hal yang bikin pusing.
+dd dd ini sudah gede gais🥺🥺🥹🥹🥹🥹🥹🥹🥹,
+im truly soo proud of her soooo much much muchhhhhh
 
-udah ah segitu dulu. nanti jara geer.
-stay lucu, stay gemess, dan jangan berubah jadi galak 🤍`,
+jara uda gede, dan udah dewasa, jadiiii kurangin begadangnya yaaa, mam yang teratur selaluuu, jaga kesehatann, yang rajin minum TTD nyaa, kurangin skrolingnyaa okeyyyy
+
+iyadehh no more panggil dd dd, kamu udah tante tante yah sekarang omaygatt ngerinyoo😱🥶🥶🥶
+
+tapiiii kalo kamu bandel dan nakal berati masi dd dd n bocil kecil badung, biarin aku bakal panggil bocil terus kalo bandel... jangan bandel😡😡
+
+selamat menempuh lembaran baru di level ke 20 ini yaaa jara cantikk maniss imup qiyutt🥳🥳🥳
+
+glad i'm still here watching u grow up🥺`,
   memories: [],
   emojiPool: ["🐵", "🙊", "🙉", "🙈", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "👽", "👻", "😈", "👺", "🫣", "🧐", "👾", "🐶", "🐺", "🐱", "🦁", "🐯", "🦊", "🦝", "🐮", "🐷", "🐗", "🐭", "🐹", "🐰", "🐻", "🐻‍❄️", "🐨", "🐼", "🐸", "🦓", "👩", "👨", "🧑", "👧", "👦", "🧒", "👶", "👵", "👴", "🧓", "👩‍🦰", "👨‍🦰", "🧑‍🦰", "👩‍🦱", "👨‍🦱", "🧑‍🦱", "👩‍🦲", "👨‍🦲", "🧑‍🦲", "👩‍🦳", "👨‍🦳", "🧑‍🦳", "👱‍♀️", "👱‍♂️", "👱", "👸", "🫅", "🤴", "👳‍♀️", "👳‍♂️", "👳", "👲", "🧔", "🧔‍♂️", "🧔‍♀️", "👼", "🤶", "🎅", "🧑‍🎄", "👮‍♀️", "👮‍♂️", "👮", "🕵️‍♀️", "🕵️‍♂️", "🕵️", "💂‍♀️", "💂‍♂️", "💂", "🥷", "👷‍♀️", "👷‍♂️", "👷", "👩‍⚕️", "👨‍⚕️", "🧑‍⚕️", "👩‍🎓", "🧑‍🎓", "👩‍🏫", "👨‍🏫", "👨‍🎓", "🧑‍🏫", "👩‍⚖️", "👨‍⚖️", "🧑‍⚖️", "👩‍🌾", "👨‍🌾", "🧑‍🌾", "👩‍🍳", "👩‍🔧", "🙍‍♀️", "🙍‍♀️", "🧏‍♀️", "🧏‍♂️", "🧏", "💁‍♀️", "💁‍♂️", "💁", "🙋‍♀️", "🙋‍♂️", "🙋‍♂️", "🧘", "🧘‍♂️", "🧘‍♀️", "🕺", "💃", "🤸‍♀️", "🤸‍♂️", "🤸"],
   intensity: {
