@@ -4,6 +4,26 @@
   const imageExtensions = /\.(?:avif|gif|jpe?g|png|webp)$/i;
   const apiBase = "https://api.github.com/repos/bbmoralezz/birthday/contents/2026/image";
 
+  // Static fallback keeps Memories working when the GitHub API is unavailable.
+  // New images are still discovered automatically whenever the API request succeeds.
+  const fallbackImages = [
+    "image/2.jpeg",
+    "image/3.jpg",
+    "image/4.jpg",
+    "image/5.jpg",
+    "image/6.jpg",
+    "image/7.jpg",
+    "image/8.jpg",
+    "image/9.jpg",
+    "image/10.jpg",
+    "image/11.jpg",
+    "image/12.jpg",
+    "image/13.jpg",
+    "image/IMG-20260306-WA0060.jpg",
+    "image/IMG-20260306-WA0063.jpg",
+    "image/IMG-20260308-WA0080.jpg"
+  ];
+
   async function discoverImages() {
     const entries = [];
 
@@ -37,8 +57,8 @@
       return images;
     })
     .catch(error => {
-      console.error("Unable to discover 2026 images:", error);
-      window.birthday2026Images = [];
-      return [];
+      console.warn("Unable to discover 2026 images from GitHub API; using fallback list.", error);
+      window.birthday2026Images = [...fallbackImages];
+      return window.birthday2026Images;
     });
 })();
