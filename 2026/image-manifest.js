@@ -2,63 +2,84 @@
   "use strict";
 
   const imageExtensions = /\.(?:avif|gif|jpe?g|png|webp)$/i;
-  const apiBase = "https://api.github.com/repos/bbmoralezz/birthday/contents/2026/image";
+  const treeApi = "https://api.github.com/repos/bbmoralezz/birthday/git/trees/main?recursive=1";
+  const cacheKey = "birthday2026-image-manifest-v2";
 
-  // Static fallback keeps Memories working when the GitHub API is unavailable.
-  // New images are still discovered automatically whenever the API request succeeds.
-  const fallbackImages = [
-    "image/2.jpeg",
-    "image/3.jpg",
-    "image/4.jpg",
-    "image/5.jpg",
-    "image/6.jpg",
-    "image/7.jpg",
-    "image/8.jpg",
-    "image/9.jpg",
-    "image/10.jpg",
-    "image/11.jpg",
-    "image/12.jpg",
-    "image/13.jpg",
-    "image/IMG-20260306-WA0060.jpg",
-    "image/IMG-20260306-WA0063.jpg",
-    "image/IMG-20260308-WA0080.jpg"
-  ];
+  const readCache = () => {
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+      return Array.isArray(cached) ? cached : [];
+    } catch (_) {
+      return [];
+    }
+  };
 
-  async function discoverImages() {
-    const entries = [];
+  const writeCache = images => {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(images));
+    } catch (_) {}
+  };
 
-    for (let page = 1; page <= 10; page += 1) {
-      const response = await fetch(`${apiBase}?ref=main&per_page=100&page=${page}`, {
+  async function fetchTree() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const response = await fetch(`${treeApi}&t=${Date.now()}`, {
         headers: { Accept: "application/vnd.github+json" },
-        cache: "no-store"
+        cache: "no-store",
+        signal: controller.signal
       });
 
-      if (!response.ok) throw new Error(`Image directory request failed: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`GitHub tree request failed: ${response.status}`);
+      }
 
-      const pageEntries = await response.json();
-      if (!Array.isArray(pageEntries)) throw new Error("Invalid image directory response");
+      const data = await response.json();
+      if (!Array.isArray(data?.tree)) {
+        throw new Error("Invalid GitHub tree response");
+      }
 
-      entries.push(...pageEntries);
-      if (pageEntries.length < 100) break;
+      if (data.truncated) {
+        throw new Error("GitHub tree response was truncated");
+      }
+
+      return data.tree
+        .filter(entry => (
+          entry?.type === "blob" &&
+          entry.path?.startsWith("2026/image/") &&
+          imageExtensions.test(entry.path)
+        ))
+        .map(entry => entry.path.slice("2026/".length))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  async function discoverImages() {
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        const images = [...new Set(await fetchTree())];
+        if (!images.length) throw new Error("No images found in 2026/image");
+        writeCache(images);
+        return images;
+      } catch (error) {
+        if (attempt === 2) {
+          console.warn("Unable to read 2026/image from GitHub; trying cached manifest.", error);
+        }
+      }
     }
 
-    const images = entries
-      .filter(entry => entry?.type === "file" && imageExtensions.test(entry.name || ""))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }))
-      .map(entry => `image/${encodeURIComponent(entry.name).replace(/%2F/g, "/")}`);
+    const cached = readCache();
+    if (cached.length) return cached;
 
-    if (!images.length) throw new Error("No images found in 2026/image");
-    return [...new Set(images)];
+    return [];
   }
 
   window.birthday2026ImagesPromise = discoverImages()
     .then(images => {
       window.birthday2026Images = images;
       return images;
-    })
-    .catch(error => {
-      console.warn("Unable to discover 2026 images from GitHub API; using fallback list.", error);
-      window.birthday2026Images = [...fallbackImages];
-      return window.birthday2026Images;
     });
 })();
