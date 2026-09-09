@@ -1,5 +1,4 @@
 window.birthday2026Images = [
-  "image/1.jpeg",
   "image/2.jpeg",
   "image/3.jpg",
   "image/4.jpg",
@@ -13,5 +12,6 @@ window.birthday2026Images = [
   "image/12.jpg",
   "image/13.jpg",
   "image/IMG-20260306-WA0060.jpg",
-  "image/IMG-20260306-WA0063.jpg"
+  "image/IMG-20260306-WA0063.jpg",
+
 ];
