@@ -1,4 +1,4 @@
-const birthdayConfig = {
+window.birthdayConfig = {
   name: "Yasmin Az Zahra'",
   birthday: "2026-09-20",
   mainPhoto: "1.jpeg",
