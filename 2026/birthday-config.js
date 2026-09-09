@@ -1,7 +1,7 @@
 window.birthdayConfig = {
   name: "Yasmin Az Zahra'",
   birthday: "2006-09-10",
-  mainPhoto: "image/main.jpeg",
+  mainPhoto: "main.jpeg",
   secretImage: "pp.jpg",
   secretCaption: "wleee😛",
   music: "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
