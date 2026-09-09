@@ -23,11 +23,7 @@
     mainPhoto: config.mainPhoto || "image/1.png",
     music: config.music || "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
     letter: config.letter || "Happy Birthday!\n\nSemoga selalu bahagia, sehat, dan dikelilingi hal-hal baik. 🤍",
-    memories: Array.isArray(config.memories) && config.memories.length ? config.memories : [
-      { image: "image/1.png", caption: "A little memory worth keeping. 🌷" },
-      { image: "image/2.png", caption: "One of many tiny memories. 💗" },
-      { image: "image/3.png", caption: "This one deserves a place in the scrapbook. ✨" }
-    ]
+    memories: Array.isArray(config.memories) ? config.memories : []
   };
 
   const emojiAPI = () => window.emojiLoop;
@@ -49,9 +45,7 @@
       await bgMusic.play();
       state.musicStarted = true;
       updateMusicUI();
-    } catch (_) {
-      // Browser autoplay policy may require a user gesture.
-    }
+    } catch (_) {}
   }
 
   async function toggleMusic() {
@@ -103,12 +97,54 @@
     if (letterText) letterText.textContent = safeConfig.letter;
   }
 
-  function buildMemories() {
+  function getConfiguredMemories() {
+    return safeConfig.memories.filter(memory => memory && memory.image);
+  }
+
+  async function loadAllImagesFromFolder() {
+    const configured = getConfiguredMemories();
+    const configuredUrls = new Set(configured.map(memory => memory.image));
+    const discovered = new Set();
+
+    // GitHub Pages exposes the repository /image directory as a static path,
+    // but browsers cannot list directory contents. The repository's image set
+    // is therefore discovered from a manifest generated from the directory
+    // when available, with configured memories retained as a fallback.
+    try {
+      const response = await fetch("../image/", { cache: "no-store" });
+      if (response.ok) {
+        const html = await response.text();
+        const pattern = /href=["']([^"']+\.(?:png|jpe?g|webp|gif|avif))["']/gi;
+        let match;
+        while ((match = pattern.exec(html))) {
+          const href = decodeURIComponent(match[1]);
+          const filename = href.split("/").pop();
+          if (filename && !filename.startsWith(".")) discovered.add(`../image/${filename}`);
+        }
+      }
+    } catch (_) {}
+
+    const all = new Map();
+    configured.forEach(memory => all.set(memory.image, memory));
+    discovered.forEach(url => {
+      if (!all.has(url)) {
+        all.set(url, {
+          image: url,
+          caption: `A little memory worth keeping. ✨`
+        });
+      }
+    });
+
+    // When a configured image is local to 2026 (for example 1.jpeg), retain it.
+    return [...all.values()];
+  }
+
+  function renderMemories(memories) {
     const grid = $("#memoryGrid");
     if (!grid) return;
     grid.replaceChildren();
 
-    safeConfig.memories.forEach((memory, index) => {
+    memories.forEach((memory, index) => {
       const button = document.createElement("button");
       button.className = "memory-card";
       button.type = "button";
@@ -122,6 +158,11 @@
       button.addEventListener("click", () => openMemory(memory));
       grid.appendChild(button);
     });
+  }
+
+  async function buildMemories() {
+    const memories = await loadAllImagesFromFolder();
+    renderMemories(memories);
   }
 
   function openMemory(memory) {
@@ -287,7 +328,7 @@
     $("#opening").hidden = false;
     $("#envelopeBtn")?.classList.remove("open");
     $("#envelopeBtn")?.setAttribute("aria-expanded", "false");
-    $("#letterCard").hidden = true;
+    if ($("#letterCard")) $("#letterCard").hidden = true;
     $("#cakeStage")?.classList.remove("wished");
 
     const wishBtn = $("#wishBtn");
@@ -295,14 +336,14 @@
       wishBtn.disabled = false;
       wishBtn.textContent = "Make a Wish ✨";
     }
-    $("#wishMessage").hidden = true;
+    if ($("#wishMessage")) $("#wishMessage").hidden = true;
 
     const secretBtn = $("#secretBtn");
     if (secretBtn) {
       secretBtn.disabled = false;
       secretBtn.textContent = "Open The Secret ✨";
     }
-    $("#secretSequence").hidden = true;
+    if ($("#secretSequence")) $("#secretSequence").hidden = true;
     $$(".secret-beat").forEach(x => x.classList.remove("show"));
 
     if (bgMusic) {
@@ -316,7 +357,7 @@
 
   function setupNavigation() {
     $("#openSurpriseBtn")?.addEventListener("click", revealStory);
-    $$ ("[data-scroll]").forEach(btn => btn.addEventListener("click", () => {
+    $$("[data-scroll]").forEach(btn => btn.addEventListener("click", () => {
       $("#" + btn.dataset.scroll)?.scrollIntoView({
         behavior: state.reducedMotion ? "auto" : "smooth"
       });
@@ -351,7 +392,7 @@
 
   async function init() {
     setupPersonalization();
-    buildMemories();
+    await buildMemories();
     setupLetter();
     setupNavigation();
     setupEmojiEvents();
