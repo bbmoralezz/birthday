@@ -19,10 +19,10 @@
 
   const safeConfig = {
     name: config.name || "You",
-    birthday: config.birthday || "2026-09-20",
+    birthday: config.birthday || "2026-09-10",
     mainPhoto: config.mainPhoto || "image/1.png",
-    secretImage: config.secretImage || "image/1.jpeg",
-    secretCaption: config.secretCaption || "yaudah ini ajaa 😭",
+    secretImage: config.secretImage || "pp.jpg",
+    secretCaption: config.secretCaption || "wleee😛",
     music: config.music || "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
     letter: config.letter || "Happy Birthday!\n\nSemoga selalu bahagia, sehat, dan dikelilingi hal-hal baik. 🤍"
   };
