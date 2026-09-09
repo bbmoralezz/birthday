@@ -351,6 +351,9 @@
 
   async function init() {
     setupPersonalization();
+    try {
+      await window.birthday2026ImagesPromise;
+    } catch (_) {}
     buildMemories();
     setupLetter();
     setupNavigation();
