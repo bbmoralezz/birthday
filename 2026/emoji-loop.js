@@ -6,18 +6,17 @@
   if (!layer) return;
 
   const fallbackMessages = [
-    { category: "greeting", message: "Happy Birthday! 🎂" },
-    { category: "cute", message: "Jangan lupa senyum hari ini 🤍" },
-    { category: "wish", message: "Semoga semua impianmu tercapai ✨" },
-    { category: "romantic", message: "You are very special to me ❤️" },
-    { category: "surprise", message: "Psst... masih ada kejutan 👀" },
-    { category: "funny", message: "Umur boleh bertambah, tapi tetap cute 😆" }
+    { category: "greeting", message: "Happy Birthday Jaraaaa!!!" },
+    { category: "cute", message: "udah pup belum" },
+    { category: "wish", message: "jangan lupa mamm" },
+    { category: "romantic", message: "jara yang kuatt" },
+    { category: "surprise", message: "cieee kepala duaaa" },
+    { category: "funny", message: "dd ultah gess" }
   ];
 
   const emojiPool = Array.isArray(config.emojiPool) && config.emojiPool.length
     ? config.emojiPool
-    : ["🥰", "😊", "🥺", "😆", "😂", "🤭", "😳", "👀", "🐻", "🐰", "🐱", "🐣", "🧸", "💗", "💖", "❤️", "✨", "🌷", "🎀", "🎂", "🎈", "🌸"];
-
+  : ["🐵", "🙊", "🙉", "🙈", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "👽", "👻", "😈", "👺", "🫣", "🧐", "👾", "🐶", "🐺", "🐱", "🦁", "🐯", "🦊", "🦝", "🐮", "🐷", "🐗", "🐭", "🐹", "🐰", "🐻", "🐻‍❄️", "🐨", "🐼", "🐸", "🦓", "👩", "👨", "🧑", "👧", "👦", "🧒", "👶", "👵", "👴", "🧓", "👩‍🦰", "👨‍🦰", "🧑‍🦰", "👩‍🦱", "👨‍🦱", "🧑‍🦱", "👩‍🦲", "👨‍🦲", "🧑‍🦲", "👩‍🦳", "👨‍🦳", "🧑‍🦳", "👱‍♀️", "👱‍♂️", "👱", "👸", "🫅", "🤴", "👳‍♀️", "👳‍♂️", "👳", "👲", "🧔", "🧔‍♂️", "🧔‍♀️", "👼", "🤶", "🎅", "🧑‍🎄", "👮‍♀️", "👮‍♂️", "👮", "🕵️‍♀️", "🕵️‍♂️", "🕵️", "💂‍♀️", "💂‍♂️", "💂", "🥷", "👷‍♀️", "👷‍♂️", "👷", "👩‍⚕️", "👨‍⚕️", "🧑‍⚕️", "👩‍🎓", "🧑‍🎓", "👩‍🏫", "👨‍🏫", "👨‍🎓", "🧑‍🏫", "👩‍⚖️", "👨‍⚖️", "🧑‍⚖️", "👩‍🌾", "👨‍🌾", "🧑‍🌾", "👩‍🍳", "👩‍🔧", "🙍‍♀️", "🙍‍♀️", "🧏‍♀️", "🧏‍♂️", "🧏", "💁‍♀️", "💁‍♂️", "💁", "🙋‍♀️", "🙋‍♂️", "🙋‍♂️", "🧘", "🧘‍♂️", "🧘‍♀️", "🕺", "💃", "🤸‍♀️", "🤸‍♂️", "🤸"];
   const defaults = {
     calm: { interval: 2500, max: 2, minDuration: 5200, maxDuration: 7000 },
     cute: { interval: 1800, max: 4, minDuration: 5000, maxDuration: 6800 },
