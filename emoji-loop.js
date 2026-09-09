@@ -16,20 +16,27 @@
 
   const emojiPool = Array.isArray(config.emojiPool) && config.emojiPool.length
     ? config.emojiPool
-    : ["🥰","😊","🥺","😆","😂","🤭","😳","👀","🐻","🐰","🐱","🐣","🧸","💗","💖","❤️","✨","🌷","🎀","🎂","🎈","🌸"];
+    : ["🥰", "😊", "🥺", "😆", "😂", "🤭", "😳", "👀", "🐻", "🐰", "🐱", "🐣", "🧸", "💗", "💖", "❤️", "✨", "🌷", "🎀", "🎂", "🎈", "🌸"];
 
-  const intensity = {
+  const defaults = {
     calm: { interval: 2500, max: 2, minDuration: 5200, maxDuration: 7000 },
     cute: { interval: 1800, max: 4, minDuration: 5000, maxDuration: 6800 },
     playful: { interval: 1200, max: 6, minDuration: 4500, maxDuration: 6500 },
     celebration: { interval: 700, max: 10, minDuration: 4200, maxDuration: 6000 }
   };
 
-  Object.keys(intensity).forEach(key => {
-    if (config.intensity && config.intensity[key]) {
-      intensity[key] = { ...intensity[key], ...config.intensity[key] };
-    }
-  });
+  const rawIntensity = config.intensity || {};
+  const intensity = Object.fromEntries(Object.entries(defaults).map(([name, base]) => {
+    const override = rawIntensity[name] || {};
+    return [name, {
+      ...base,
+      ...override,
+      interval: override.interval ?? override.spawnInterval ?? base.interval,
+      max: override.max ?? override.maxActive ?? base.max,
+      minDuration: override.minDuration ?? base.minDuration,
+      maxDuration: override.maxDuration ?? base.maxDuration
+    }];
+  }));
 
   const state = {
     messages: fallbackMessages,
@@ -37,8 +44,11 @@
     active: 0,
     timer: null,
     current: "calm",
-    storyOpen: true,
-    reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false
+    running: false,
+    reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches || false,
+    nodes: new Set(),
+    timeouts: new Set(),
+    intensityObserver: null
   };
 
   function parseCSV(text) {
@@ -99,64 +109,73 @@
       const parsed = parseCSV(await response.text());
       if (parsed.length) state.messages = parsed;
     } catch (_) {
-      // Keep the built-in fallback so the animation never depends on the CSV loading.
+      // Fallback messages keep the animation independent from network availability.
     }
   }
 
   function pickMessage(categories = []) {
-    const wanted = new Set(categories);
+    const wanted = new Set(categories.map(value => String(value).trim().toLowerCase()));
     const filtered = wanted.size
       ? state.messages.filter(item => wanted.has(String(item.category).trim().toLowerCase()))
       : state.messages;
-    const source = filtered.length ? filtered : state.messages.length ? state.messages : fallbackMessages;
+    const source = filtered.length ? filtered : (state.messages.length ? state.messages : fallbackMessages);
     const available = source.filter(item => !state.recent.includes(item.message));
     const candidates = available.length ? available : source;
     const chosen = candidates[Math.floor(Math.random() * candidates.length)];
 
     state.recent.push(chosen.message);
-    if (state.recent.length > 8) state.recent.shift();
+    if (state.recent.length > Math.min(8, source.length)) state.recent.shift();
     return chosen.message;
   }
 
-  function safeSidePosition(side) {
+  function safePosition() {
     const compact = window.innerWidth <= 380;
     const minEdge = compact ? 5 : 6;
     const maxEdge = compact ? 31 : 34;
-    const x = minEdge + Math.random() * (maxEdge - minEdge);
-    const y = 13 + Math.random() * 72;
-    return { x, y, side };
+    return {
+      side: Math.random() < 0.5 ? "left" : "right",
+      x: minEdge + Math.random() * (maxEdge - minEdge),
+      y: 13 + Math.random() * 72
+    };
   }
 
-  function cleanupForeignNodes() {
-    layer.querySelectorAll(".emoji-bubble-wrap:not(.emoji-loop-owned)").forEach(node => node.remove());
+  function clearTimeoutHandle(handle) {
+    if (!handle) return;
+    window.clearTimeout(handle);
+    state.timeouts.delete(handle);
   }
 
-  function spawn(categories = []) {
-    if (state.reducedMotion || !state.storyOpen) return;
+  function removeNode(wrapper) {
+    if (!wrapper || !state.nodes.has(wrapper)) return;
+    state.nodes.delete(wrapper);
+    if (wrapper.isConnected) wrapper.remove();
+    state.active = Math.max(0, state.active - 1);
+    const timeout = wrapper.__emojiLoopTimeout;
+    if (timeout) clearTimeoutHandle(timeout);
+    wrapper.__emojiLoopTimeout = null;
+  }
+
+  function spawn(categories = [], options = {}) {
+    if (state.reducedMotion || !state.running) return false;
 
     const cfg = intensity[state.current] || intensity.cute;
-    if (state.active >= cfg.max) return;
+    if (!options.force && state.active >= cfg.max) return false;
 
-    cleanupForeignNodes();
-
-    const side = Math.random() < 0.5 ? "left" : "right";
-    const pos = safeSidePosition(side);
-    const duration = cfg.minDuration + Math.random() * (cfg.maxDuration - cfg.minDuration);
+    const pos = safePosition();
+    const duration = options.duration ?? (cfg.minDuration + Math.random() * (cfg.maxDuration - cfg.minDuration));
     const scale = 0.85 + Math.random() * 0.35;
-
     const wrapper = document.createElement("div");
     const emoji = document.createElement("span");
     const bubble = document.createElement("div");
 
     wrapper.className = "emoji-bubble-wrap emoji-loop-owned";
     emoji.className = "floating-emoji";
-    bubble.className = `speech-bubble ${side === "left" ? "bubble-right" : "bubble-left"}`;
-
+    bubble.className = `speech-bubble ${pos.side === "left" ? "bubble-right" : "bubble-left"}`;
     emoji.textContent = emojiPool[Math.floor(Math.random() * emojiPool.length)];
     bubble.textContent = pickMessage(categories);
 
-    wrapper.style.left = side === "left" ? `${pos.x}%` : "auto";
-    wrapper.style.right = side === "right" ? `${pos.x}%` : "auto";
+    wrapper.style.left = pos.side === "left" ? `${pos.x}%` : "auto";
+    wrapper.style.right = pos.side === "right" ? `${pos.x}%` : "auto";
     wrapper.style.top = `${pos.y}%`;
     wrapper.style.setProperty("--size", `${(1.5 + Math.random() * 0.75).toFixed(2)}rem`);
     wrapper.style.setProperty("--duration", `${duration}ms`);
@@ -166,64 +185,124 @@
 
     wrapper.append(emoji, bubble);
     layer.appendChild(wrapper);
+    state.nodes.add(wrapper);
     state.active++;
 
-    let removed = false;
-    const remove = () => {
-      if (removed) return;
-      removed = true;
-      if (wrapper.isConnected) wrapper.remove();
-      state.active = Math.max(0, state.active - 1);
-    };
-
+    const remove = () => removeNode(wrapper);
     wrapper.addEventListener("animationend", remove, { once: true });
-    setTimeout(remove, duration + 1000);
+    const timeout = window.setTimeout(remove, duration + 1200);
+    wrapper.__emojiLoopTimeout = timeout;
+    state.timeouts.add(timeout);
+    return true;
   }
 
-  function restartLoop() {
-    clearInterval(state.timer);
-    state.timer = null;
+  function clear() {
+    for (const timeout of [...state.timeouts]) clearTimeoutHandle(timeout);
+    for (const node of [...state.nodes]) {
+      if (node.isConnected) node.remove();
+    }
+    state.nodes.clear();
+    state.active = 0;
+
+    layer.querySelectorAll(".emoji-bubble-wrap.emoji-loop-owned").forEach(node => node.remove());
+  }
+
+  function stop() {
+    state.running = false;
+    if (state.timer) {
+      window.clearInterval(state.timer);
+      state.timer = null;
+    }
+  }
+
+  function start() {
     if (state.reducedMotion) return;
+    state.running = true;
+    restartTimer();
+  }
+
+  function restartTimer() {
+    if (state.timer) {
+      window.clearInterval(state.timer);
+      state.timer = null;
+    }
+    if (!state.running || state.reducedMotion) return;
 
     const cfg = intensity[state.current] || intensity.cute;
-    // Keep the loop independent from scrolling and clicks.
-    spawn();
-    state.timer = setInterval(spawn, cfg.interval);
+    state.timer = window.setInterval(() => spawn(), Math.max(250, cfg.interval));
   }
 
   function setIntensity(name) {
-    if (!intensity[name]) name = "cute";
-    state.current = name;
-    restartLoop();
+    const next = intensity[name] ? name : "cute";
+    const changed = state.current !== next;
+    state.current = next;
+    if (!state.running) start();
+    if (changed) restartTimer();
+
+    // Make intensity changes perceptible immediately without depending on an observer event.
+    if (state.running && state.active === 0) spawn();
   }
 
-  function watchSections() {
-    if (!("IntersectionObserver" in window)) return;
+  function burst({ category = null, count = 1, stagger = 0 } = {}) {
+    if (state.reducedMotion || !state.running) return;
+    const total = Math.max(0, Math.floor(count));
+    for (let i = 0; i < total; i++) {
+      if (stagger <= 0) {
+        spawn(category ? [category] : [], { force: true });
+        continue;
+      }
+      const handle = window.setTimeout(() => {
+        state.timeouts.delete(handle);
+        if (state.running) spawn(category ? [category] : [], { force: true });
+      }, i * stagger);
+      state.timeouts.add(handle);
+    }
+  }
+
+  function reset() {
+    stop();
+    clear();
+    state.recent = [];
+    state.current = "calm";
+    start();
+    spawn();
+  }
+
+  function setupSectionObserver() {
+    if (!("IntersectionObserver" in window) || state.intensityObserver) return;
 
     const sections = document.querySelectorAll(".story-section[data-intensity]");
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        setIntensity(entry.target.dataset.intensity || "cute");
-      });
-    }, { threshold: 0.45 });
+    state.intensityObserver = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setIntensity(visible.target.dataset.intensity || "cute");
+    }, { threshold: [0.2, 0.35, 0.5, 0.7] });
 
-    sections.forEach(section => observer.observe(section));
+    sections.forEach(section => state.intensityObserver.observe(section));
   }
 
-  // Remove nodes from the old engine if it tries to spawn alongside this loop.
-  const observer = new MutationObserver(mutations => {
-    for (const mutation of mutations) {
-      if (!mutation.addedNodes.length) continue;
-      cleanupForeignNodes();
-      break;
-    }
-  });
-  observer.observe(layer, { childList: true });
+  function exposeAPI() {
+    window.emojiLoop = Object.freeze({
+      start,
+      stop,
+      reset,
+      clear,
+      spawn,
+      burst,
+      setIntensity,
+      pickMessage,
+      getState: () => ({
+        active: state.active,
+        running: state.running,
+        intensity: state.current
+      })
+    });
+  }
 
-  // Always keep the living layer running. The opening page is calm; opening the story
-  // and entering later sections changes intensity rather than starting/stopping the loop.
-  setIntensity("calm");
-  watchSections();
+  exposeAPI();
+  setupSectionObserver();
+  start();
+  spawn();
   loadMessages();
 })();
