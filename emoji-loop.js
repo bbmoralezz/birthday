@@ -155,6 +155,14 @@
     if (timeout) clearTimeoutHandle(timeout);
   }
 
+  function isOwnLifecycleAnimation(event, wrapper) {
+    return Boolean(
+      event &&
+      event.target === wrapper &&
+      (event.animationName === "emojiFloat" || event.animationName === "")
+    );
+  }
+
   function spawn(categories = [], options = {}) {
     if (state.reducedMotion || !state.running) return false;
 
@@ -188,14 +196,21 @@
     state.nodes.add(wrapper);
     state.active++;
 
-    const remove = event => {
-      // animationend bubbles from floating-emoji and speech-bubble. Only the
-      // wrapper's own float animation may end its lifecycle.
-      if (event && (event.target !== wrapper || event.animationName !== "emojiFloat")) return;
+    const handleAnimationEnd = event => {
+      // Child animations (emojiBob/bubblePop) bubble to the wrapper.
+      // They must never terminate the wrapper lifecycle.
+      if (!isOwnLifecycleAnimation(event, wrapper)) return;
       removeNode(wrapper);
     };
-    wrapper.addEventListener("animationend", remove);
-    const timeout = window.setTimeout(() => removeNode(wrapper), duration + 1200);
+    const handleAnimationCancel = event => {
+      if (event.target !== wrapper) return;
+      removeNode(wrapper);
+    };
+
+    wrapper.addEventListener("animationend", handleAnimationEnd);
+    wrapper.addEventListener("animationcancel", handleAnimationCancel);
+
+    const timeout = window.setTimeout(() => removeNode(wrapper), Math.max(duration + 1200, 1500));
     wrapper.__emojiLoopTimeout = timeout;
     state.timeouts.add(timeout);
     return true;
