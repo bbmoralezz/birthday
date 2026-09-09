@@ -22,8 +22,7 @@
     birthday: config.birthday || "2026-09-20",
     mainPhoto: config.mainPhoto || "image/1.png",
     music: config.music || "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
-    letter: config.letter || "Happy Birthday!\n\nSemoga selalu bahagia, sehat, dan dikelilingi hal-hal baik. 🤍",
-    memories: Array.isArray(config.memories) ? config.memories : []
+    letter: config.letter || "Happy Birthday!\n\nSemoga selalu bahagia, sehat, dan dikelilingi hal-hal baik. 🤍"
   };
 
   const emojiAPI = () => window.emojiLoop;
@@ -97,72 +96,32 @@
     if (letterText) letterText.textContent = safeConfig.letter;
   }
 
-  function getConfiguredMemories() {
-    return safeConfig.memories.filter(memory => memory && memory.image);
-  }
-
-  async function loadAllImagesFromFolder() {
-    const configured = getConfiguredMemories();
-    const configuredUrls = new Set(configured.map(memory => memory.image));
-    const discovered = new Set();
-
-    // GitHub Pages exposes the repository /image directory as a static path,
-    // but browsers cannot list directory contents. The repository's image set
-    // is therefore discovered from a manifest generated from the directory
-    // when available, with configured memories retained as a fallback.
-    try {
-      const response = await fetch("../image/", { cache: "no-store" });
-      if (response.ok) {
-        const html = await response.text();
-        const pattern = /href=["']([^"']+\.(?:png|jpe?g|webp|gif|avif))["']/gi;
-        let match;
-        while ((match = pattern.exec(html))) {
-          const href = decodeURIComponent(match[1]);
-          const filename = href.split("/").pop();
-          if (filename && !filename.startsWith(".")) discovered.add(`../image/${filename}`);
-        }
-      }
-    } catch (_) {}
-
-    const all = new Map();
-    configured.forEach(memory => all.set(memory.image, memory));
-    discovered.forEach(url => {
-      if (!all.has(url)) {
-        all.set(url, {
-          image: url,
-          caption: `A little memory worth keeping. ✨`
-        });
-      }
-    });
-
-    // When a configured image is local to 2026 (for example 1.jpeg), retain it.
-    return [...all.values()];
-  }
-
-  function renderMemories(memories) {
+  function buildMemories() {
     const grid = $("#memoryGrid");
     if (!grid) return;
+
+    const images = Array.isArray(window.birthday2026Images) ? window.birthday2026Images : [];
+    const uniqueImages = [...new Set(images.filter(Boolean))];
+
     grid.replaceChildren();
 
-    memories.forEach((memory, index) => {
+    uniqueImages.forEach((image, index) => {
       const button = document.createElement("button");
       button.className = "memory-card";
       button.type = "button";
       button.setAttribute("aria-label", `Open memory ${index + 1}`);
-      button.innerHTML = `<img src="${escapeHTML(memory.image)}" alt="Memory ${index + 1}" loading="lazy"><figcaption><span class="memory-number">${String(index + 1).padStart(2, "0")}</span> · ${escapeHTML(memory.caption || "A little memory.")}</figcaption>`;
+
+      const caption = `Memory ${String(index + 1).padStart(2, "0")}`;
+      button.innerHTML = `<img src="${escapeHTML(image)}" alt="${caption}" loading="lazy"><figcaption><span class="memory-number">${String(index + 1).padStart(2, "0")}</span> · ${caption}</figcaption>`;
 
       const img = $("img", button);
       img.addEventListener("error", () => {
-        img.src = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 600"><rect width="100%" height="100%" fill="#f3ded3"/><text x="50%" y="48%" text-anchor="middle" font-size="70">🌷</text><text x="50%" y="60%" text-anchor="middle" font-size="24" fill="#8b6f61">little memory</text></svg>`)}`;
+        button.remove();
       });
-      button.addEventListener("click", () => openMemory(memory));
+
+      button.addEventListener("click", () => openMemory({ image, caption }));
       grid.appendChild(button);
     });
-  }
-
-  async function buildMemories() {
-    const memories = await loadAllImagesFromFolder();
-    renderMemories(memories);
   }
 
   function openMemory(memory) {
@@ -357,7 +316,7 @@
 
   function setupNavigation() {
     $("#openSurpriseBtn")?.addEventListener("click", revealStory);
-    $$("[data-scroll]").forEach(btn => btn.addEventListener("click", () => {
+    $$ ("[data-scroll]").forEach(btn => btn.addEventListener("click", () => {
       $("#" + btn.dataset.scroll)?.scrollIntoView({
         behavior: state.reducedMotion ? "auto" : "smooth"
       });
@@ -392,7 +351,7 @@
 
   async function init() {
     setupPersonalization();
-    await buildMemories();
+    buildMemories();
     setupLetter();
     setupNavigation();
     setupEmojiEvents();
