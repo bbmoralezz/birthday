@@ -3,9 +3,19 @@ window.birthdayConfig = {
   birthday: "2006-09-10",
   mainPhoto: "image/main.jpeg",
   music: "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
-  letter: `Happy Birthday!\n\nSemoga di umur yang baru ini kamu selalu dikelilingi kebahagiaan, orang-orang baik, dan hal-hal indah.\n\nSemoga setiap langkahmu membawa kamu lebih dekat kepada semua hal yang kamu impikan.\n\nStay happy.\nStay cute.\nAlways be yourself. 🤍`,
-  memories: [
-  ],
+  letter: `happy birthday jaraaa 🎂
+
+akhirnya kepala dua juga yaa. selamat datang di umur yang katanya udah dewasa, walaupun kayaknya masih suka bilang "bentar" terus hilang sejam wkwk.
+
+semoga di umur yang baru ini jara selalu sehat, bahagia, dimudahkan semua urusannya, dan dipertemukan sama banyak hal baik. semoga semua yang lagi diusahain pelan pelan ketemu jalannya, dan semua yang lagi ditunggu semoga datang di waktu yang paling pas.
+
+jangan terlalu keras sama diri sendiri yaa. kalau capek istirahat, kalau sedih gapapa, tapi nanti senyum lagi. ga harus selalu kuat setiap waktu. yang penting jangan lupa makan, jangan lupa minum, jangan kebanyakan begadang juga walaupun kemungkinan besar bakal dilanggar 😭
+
+pokoknya selamat ulang tahun jaraaa. semoga tahun ini lebih baik dari sebelumnya, lebih banyak ketawa daripada nangis, lebih banyak cerita baik daripada hal yang bikin pusing.
+
+udah ah segitu dulu. nanti jara geer.
+stay lucu, stay gemess, dan jangan berubah jadi galak 🤍`,
+  memories: [],
   emojiPool: ["🐵", "🙊", "🙉", "🙈", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "👽", "👻", "😈", "👺", "🫣", "🧐", "👾", "🐶", "🐺", "🐱", "🦁", "🐯", "🦊", "🦝", "🐮", "🐷", "🐗", "🐭", "🐹", "🐰", "🐻", "🐻‍❄️", "🐨", "🐼", "🐸", "🦓", "👩", "👨", "🧑", "👧", "👦", "🧒", "👶", "👵", "👴", "🧓", "👩‍🦰", "👨‍🦰", "🧑‍🦰", "👩‍🦱", "👨‍🦱", "🧑‍🦱", "👩‍🦲", "👨‍🦲", "🧑‍🦲", "👩‍🦳", "👨‍🦳", "🧑‍🦳", "👱‍♀️", "👱‍♂️", "👱", "👸", "🫅", "🤴", "👳‍♀️", "👳‍♂️", "👳", "👲", "🧔", "🧔‍♂️", "🧔‍♀️", "👼", "🤶", "🎅", "🧑‍🎄", "👮‍♀️", "👮‍♂️", "👮", "🕵️‍♀️", "🕵️‍♂️", "🕵️", "💂‍♀️", "💂‍♂️", "💂", "🥷", "👷‍♀️", "👷‍♂️", "👷", "👩‍⚕️", "👨‍⚕️", "🧑‍⚕️", "👩‍🎓", "🧑‍🎓", "👩‍🏫", "👨‍🏫", "👨‍🎓", "🧑‍🏫", "👩‍⚖️", "👨‍⚖️", "🧑‍⚖️", "👩‍🌾", "👨‍🌾", "🧑‍🌾", "👩‍🍳", "👩‍🔧", "🙍‍♀️", "🙍‍♀️", "🧏‍♀️", "🧏‍♂️", "🧏", "💁‍♀️", "💁‍♂️", "💁", "🙋‍♀️", "🙋‍♂️", "🙋‍♂️", "🧘", "🧘‍♂️", "🧘‍♀️", "🕺", "💃", "🤸‍♀️", "🤸‍♂️", "🤸"],
   intensity: {
     calm: { spawnInterval: 2500, maxActive: 2, minDuration: 4000, maxDuration: 6000 },
