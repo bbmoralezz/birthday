@@ -1,11 +1,11 @@
 const birthdayConfig = {
   name: "Yasmin Az Zahra'",
   birthday: "2026-09-20",
-  mainPhoto: "image/1.png",
+  mainPhoto: "1.jpeg",
   music: "Aku Milikmu - Dewa 19 (KARAOKE VERSION).mp3",
   letter: `Happy Birthday!\n\nSemoga di umur yang baru ini kamu selalu dikelilingi kebahagiaan, orang-orang baik, dan hal-hal indah.\n\nSemoga setiap langkahmu membawa kamu lebih dekat kepada semua hal yang kamu impikan.\n\nStay happy.\nStay cute.\nAlways be yourself. 🤍`,
   memories: [
-    { image: "image/1.png", caption: "A little moment worth keeping. 🌷" },
+    { image: "1.jpeg", caption: "A little moment worth keeping. 🌷" },
     { image: "image/2.png", caption: "One of many tiny memories. 💗" },
     { image: "image/3.png", caption: "This one deserves a place in the scrapbook. ✨" },
     { image: "image/4.png", caption: "A memory, pressed between these pages. 🤍" },
