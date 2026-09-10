@@ -10,7 +10,7 @@ window.birthdayConfig = {
   CIEHH UDAH 20 TAHUN COOOOYYY
   BLIO SUDAH KEPALA 2 LOH YA😱😱😱😱
 
-  🥳🥳🥳🥳🥳🥳🥳🦢🦢🦢🦢🦢🦢😝😝😝😝🤭🤭🤭🤭🤭🤭😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😱😱🤯🤯🤯🫪🫪🥳🥳🥳🥳🤩🤩🤩🤩😌😌😌🫨🫨🫨🫨😯😯😯😸😸😸😼😼😼👀👀👁️🧕🏻🧕🏻🧏‍♂️🧏🧏‍♀️🤳🤳🤳🤳🤳
+  🥳🥳🥳🥳🥳🥳🥳🦢🦢🦢🦢🦢🦢😝😝😝😝🤭🤭🤭🤭🤭🤭😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😱😱🤯🤯🤯🥳🥳🥳🥳🤩🤩🤩🤩😌😌😌🫨🫨🫨🫨😯😯😯😸😸😸😼😼😼👀👀👁️🧕🏻🧕🏻🧏‍♂️🧏🧏‍♀️🤳🤳🤳🤳🤳
 
 semoga jara panjang umuurr, sehat teruuss dan bisa gapai cita cita di kepala 2 inih😼😼😼😼
 AAAAAAAAAAAAAAAAAAAAAMMMMMIIIIIIIIIIIIIIIIIIIINNNNNNNNNNNNNNNNNN
