@@ -62,12 +62,6 @@
     updateMusicUI();
   }
 
-  function escapeHTML(value) {
-    return String(value).replace(/[&<>'"]/g, char => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
-    })[char]);
-  }
-
   function setupPersonalization() {
     [$("#heroName"), $("#finalName"), $("#letterName")].forEach(el => {
       if (el) el.textContent = safeConfig.name;
@@ -98,9 +92,7 @@
     if (secretImage) {
       secretImage.src = safeConfig.secretImage;
       secretImage.alt = safeConfig.secretCaption;
-      secretImage.onerror = () => {
-        secretImage.closest(".secret-photo-card")?.remove();
-      };
+      secretImage.onerror = () => secretImage.closest(".secret-photo-card")?.remove();
     }
 
     const secretCaption = $("#secretCaption");
@@ -108,53 +100,6 @@
 
     const letterText = $("#letterText");
     if (letterText) letterText.textContent = safeConfig.letter;
-  }
-
-  function buildMemories() {
-    const grid = $("#memoryGrid");
-    if (!grid) return;
-
-    const images = Array.isArray(window.birthday2026Images) ? window.birthday2026Images : [];
-    const uniqueImages = [...new Set(images.filter(Boolean))];
-
-    grid.replaceChildren();
-
-    uniqueImages.forEach((image, index) => {
-      const button = document.createElement("button");
-      button.className = "memory-card";
-      button.type = "button";
-      button.setAttribute("aria-label", `Open memory ${index + 1}`);
-
-      const caption = `📸`;
-      button.innerHTML = `<img src="${escapeHTML(image)}" alt="${caption}" loading="lazy"><figcaption><span class="memory-number">${String(index + 1).padStart(2, "0")}</span> · ${caption}</figcaption>`;
-
-      const img = $("img", button);
-      img.addEventListener("error", () => {
-        button.remove();
-      });
-
-      button.addEventListener("click", () => openMemory({ image, caption }));
-      grid.appendChild(button);
-    });
-  }
-
-  function openMemory(memory) {
-    const viewer = $("#memoryViewer");
-    const image = $("#viewerImage");
-    const caption = $("#viewerCaption");
-    if (!viewer || !image || !caption) return;
-    image.src = memory.image;
-    image.alt = memory.caption || "Memory";
-    caption.textContent = memory.caption || "A little memory.";
-    viewer.hidden = false;
-    document.body.style.overflow = "hidden";
-    emojiAPI()?.setIntensity("playful");
-  }
-
-  function closeMemory() {
-    const viewer = $("#memoryViewer");
-    if (viewer) viewer.hidden = true;
-    document.body.style.overflow = "";
   }
 
   function setupLetter() {
@@ -287,7 +232,6 @@
     state.wishDone = false;
     state.secretDone = false;
     document.body.classList.remove("celebrating", "story-open");
-
     emojiAPI()?.reset?.();
 
     $("#storyContent").hidden = true;
@@ -327,17 +271,10 @@
         behavior: state.reducedMotion ? "auto" : "smooth"
       });
     }));
-    $("#closeMemory")?.addEventListener("click", closeMemory);
-    $("#memoryViewer")?.addEventListener("click", e => {
-      if (e.target.id === "memoryViewer") closeMemory();
-    });
     $("#wishBtn")?.addEventListener("click", wish);
     $("#secretBtn")?.addEventListener("click", secret);
     $("#replayBtn")?.addEventListener("click", replay);
     musicToggle?.addEventListener("click", toggleMusic);
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") closeMemory();
-    });
   }
 
   function setupEmojiEvents() {
@@ -355,12 +292,8 @@
     $("#hero")?.scrollIntoView({ behavior: state.reducedMotion ? "auto" : "smooth" });
   }
 
-  async function init() {
+  function init() {
     setupPersonalization();
-    try {
-      await window.birthday2026ImagesPromise;
-    } catch (_) {}
-    buildMemories();
     setupLetter();
     setupNavigation();
     setupEmojiEvents();
