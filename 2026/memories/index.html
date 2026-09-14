@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#FFF8F0">
+  <meta name="description" content="koleksi memories ulang tahun jara 2026.">
+  <title>memories · jara's birthday 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="memories-shell">
+    <div class="paper-grain" aria-hidden="true"></div>
+    <main class="memories-main">
+      <header class="memories-header">
+        <a class="back-link" href="../">← balik ke birthday</a>
+        <span class="chapter-chip chip-sage">Chapter 01</span>
+        <p class="eyebrow">little archive</p>
+        <h1 class="memories-title">memories 📸</h1>
+        <p class="memories-copy">semua potongan kecil yang sayang kalau cuma disimpan di satu halaman</p>
+      </header>
+
+      <section aria-label="Birthday memories">
+        <div id="memoryGrid" class="memory-grid memories-grid"></div>
+        <p id="memoryEmpty" class="memory-empty" hidden>belum ada foto yang bisa ditampilkan.</p>
+      </section>
+    </main>
+
+    <div class="memory-viewer" id="memoryViewer" hidden>
+      <button class="modal-close" id="closeMemory" type="button" aria-label="Close photo">×</button>
+      <div class="memory-viewer-inner">
+        <div class="memory-viewer-photo"><img id="viewerImage" alt="Selected memory"></div>
+        <p id="viewerCaption" class="viewer-caption"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../image-manifest.js?v=20260914-1"></script>
+  <script src="script.js?v=20260914-1"></script>
+</body>
+</html>
